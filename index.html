@@ -3,259 +3,716 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apmāna Mehānika</title>
+    <title>Apmāna Mehānika: Sociālās Inženierijas Simulators</title>
     <style>
+        :root {
+            --bg-main: #0b141a;
+            --bg-card: #111b21;
+            --bg-header: #202c33;
+            --bg-hover: #2a3942;
+            --accent: #00a884;
+            --accent-glow: rgba(0, 168, 132, 0.3);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            --text-main: #e9edef;
+            --text-muted: #8696a0;
+            --border: #222d34;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            min-height: 100vh;
+            background: radial-gradient(circle at center, #131e26 0%, #070d12 100%);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-y: auto;
         }
 
-        .game-card {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 24px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px var(--accent-glow); }
+            50% { box-shadow: 0 0 20px var(--accent-glow); }
+            100% { box-shadow: 0 0 5px var(--accent-glow); }
+        }
+
+        @keyframes pulseDanger {
+            0% { box-shadow: 0 0 5px var(--danger-glow); }
+            50% { box-shadow: 0 0 25px var(--danger-glow); }
+            100% { box-shadow: 0 0 5px var(--danger-glow); }
+        }
+
+        .app-container {
+            display: flex;
             width: 100%;
-            max-width: 420px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            max-width: 1050px;
+            height: 92vh;
+            max-height: 780px;
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border);
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            flex-shrink: 0;
         }
 
-        .top-bar {
+        .sidebar-header {
+            padding: 16px;
+            background-color: var(--bg-header);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
-            color: #94a3b8;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .sender-tag {
-            background-color: #334155;
-            color: #38bdf8;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.8rem;
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
         }
 
-        .message-content {
-            background-color: #0f172a;
-            border-left: 4px solid #38bdf8;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 1rem;
-            line-height: 1.5;
-            min-height: 100px;
+        .chat-item {
             display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #1f2c34;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .chat-item:hover {
+            background-color: var(--bg-header);
+        }
+
+        .chat-item.active {
+            background-color: var(--bg-hover);
+            border-left: 4px solid var(--accent);
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00a884, #005c4b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 0.85rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .chat-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 0.88rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-preview {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge {
+            background-color: var(--accent);
+            color: #111b21;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Čata Logs */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-main);
+            position: relative;
+            min-width: 0;
+        }
+
+        .chat-header {
+            padding: 12px 18px;
+            background-color: var(--bg-header);
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-image: radial-gradient(#1f2c34 1px, transparent 0);
+            background-size: 28px 28px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .message.received {
+            background-color: var(--bg-header);
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        .message.sent {
+            background-color: #005c4b;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        .message-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        /* Atbildes Pogu Izkārtojums */
+        .chat-controls {
+            padding: 14px;
+            background-color: var(--bg-header);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .opt-btn {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+            border: 1px solid #3b4a54;
+            padding: 12px 14px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        .opt-btn:hover {
+            background-color: #3b4a54;
+            border-color: var(--accent);
         }
 
-        .btn {
-            padding: 14px;
-            border: none;
+        /* Secret Scam Banneris */
+        .system-banner {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(145deg, #182229, #111b21);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent);
+            padding: 12px 14px;
             border-radius: 10px;
+            width: 260px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            z-index: 10;
+            font-size: 0.78rem;
+            animation: pulseGlow 3s infinite;
+        }
+
+        .system-banner-title {
             font-weight: bold;
-            font-size: 0.95rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sys-btn {
+            margin-top: 8px;
+            background: linear-gradient(90deg, #00a884, #008f70);
+            color: #111b21;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
+            font-size: 0.75rem;
+            width: 100%;
         }
 
-        .btn:active {
-            transform: scale(0.97);
+        /* Modālie Logi */
+        .modal {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(7, 13, 18, 0.96);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.4s ease-out;
+            overflow-y: auto;
         }
 
-        .btn-safe {
-            background-color: #10b981;
-            color: #022c22;
+        .modal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .btn-scam {
-            background-color: #ef4444;
-            color: #450a0a;
+        .rule-list {
+            text-align: left;
+            margin: 15px 0;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            color: #d1d5db;
         }
 
-        .feedback-box {
-            padding: 12px;
+        .rule-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: var(--bg-header);
+            padding: 10px 12px;
             border-radius: 8px;
+        }
+
+        .score-stars {
+            font-size: 1.8rem;
+            margin: 10px 0;
+            color: #f59e0b;
+        }
+
+        .scam-alert-box {
+            padding: 14px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
             font-size: 0.85rem;
             line-height: 1.4;
-            display: none;
         }
 
-        .end-screen {
-            display: none;
-            text-align: center;
-            flex-direction: column;
-            gap: 16px;
+        .scam-alert-box.failed {
+            background-color: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fca5a5;
         }
 
-        .end-score {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #38bdf8;
+        .scam-alert-box.passed {
+            background-color: rgba(0, 168, 132, 0.15);
+            border: 1px solid var(--accent);
+            color: #a7f3d0;
         }
 
-        .restart-btn {
-            background-color: #38bdf8;
-            color: #0f172a;
+        .start-btn, .restart-btn {
+            background: linear-gradient(90deg, #00a884, #008f70);
+            color: #111b21;
+            font-weight: bold;
+            width: 100%;
             padding: 12px;
             border: none;
             border-radius: 8px;
-            font-weight: bold;
             cursor: pointer;
+            font-size: 0.95rem;
+            margin-top: 10px;
+        }
+
+        /* MOBILĀS IERĪCES LĪDZ 768px */
+        @style media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            .app-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: 35vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .chat-main {
+                height: 65vh;
+            }
+            .system-banner {
+                width: 220px;
+                font-size: 0.72rem;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="game-card">
-    <!-- Spēles laukums -->
-    <div id="playArea" style="display: flex; flex-direction: column; gap: 20px;">
-        <div class="top-bar">
-            <span class="sender-tag" id="senderName">Sūtītājs</span>
-            <span id="progressCounter">1 / 6</span>
-        </div>
+<div class="app-container">
+    <!-- Intro Modal -->
+    <div class="modal" id="introModal">
+        <div class="modal-card">
+            <h2 style="color: var(--accent); font-size: 1.3rem;">📋 Spēles Noteikumi</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Esi laipni aicināts sociālās inženierijas simulatorā!</p>
+            
+            <div class="rule-list">
+                <div class="rule-item">
+                    <span>💬</span>
+                    <div><b>Analizē ziņas:</b> Tev būs jāatbild uz 6 dažādām sarakstēm. Dažas no tām ir krāpniecība, bet citas – pilnīgi drošas darba ziņas.</div>
+                </div>
+                <div class="rule-item">
+                    <span>🧠</span>
+                    <div><b>Pieņem lēmumu:</b> Saglabā kritisko domāšanu! Neuzbruc parastiem kolēģiem, bet neatklāj arī konfidenciālus datus.</div>
+                </div>
+                <div class="rule-item">
+                    <span>👁️</span>
+                    <div><b>Esat uzmanīgs:</b> Pievērs uzmanību visam, kas notiek uz ekrāna – apdraudējums var nākt no negaidītas puses!</div>
+                </div>
+            </div>
 
-        <div class="message-content" id="messageText">
-            Ielādē ziņu...
-        </div>
-
-        <div class="feedback-box" id="feedbackBox"></div>
-
-        <div class="actions" id="actionButtons">
-            <button class="btn btn-safe" onclick="makeChoice('safe')">✅ DROŠS</button>
-            <button class="btn btn-scam" onclick="makeChoice('scam')">🚨 KRĀPŠANA</button>
+            <button class="start-btn" onclick="startGame()">Sākt Spēli 🚀</button>
         </div>
     </div>
 
-    <!-- Rezultātu laukums -->
-    <div class="end-screen" id="endScreen">
-        <h2>Spēle pabeigta!</h2>
-        <div>Tavs rezultāts:</div>
-        <div class="end-score" id="finalScore">0/6</div>
-        <button class="restart-btn" onclick="resetGame()">Spēlēt vēlreiz</button>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>💬 Biznesa Čats</h3>
+            <span style="font-size: 0.78rem; color: var(--text-muted);" id="progressText">0 / 6</span>
+        </div>
+        <div class="chat-list" id="chatList"></div>
+    </div>
+
+    <!-- Chat Main -->
+    <div class="chat-main">
+        <!-- SLEPENAIS APMĀNS -->
+        <div class="system-banner" id="systemBanner">
+            <div class="system-banner-title">
+                <span>🛡️ Drošības Modulis</span>
+                <span style="cursor:pointer;" onclick="closeBanner()">✕</span>
+            </div>
+            <div>Atklāta aizdomīga pieteikšanās. Skenēt kontu?</div>
+            <button class="sys-btn" onclick="triggerSecretScam()">Skenēt un Aizsargāt</button>
+        </div>
+
+        <div class="chat-header">
+            <div class="avatar" id="activeAvatar">CEO</div>
+            <div>
+                <div class="chat-title" id="activeTitle">Mārcis Bērziņš (CEO)</div>
+                <div style="font-size: 0.75rem; color: var(--accent);" id="activeStatus">Tiešsaistē</div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="chat-controls">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Izvēlies atbildi:</div>
+            <div class="options-grid" id="optionsGrid"></div>
+        </div>
+    </div>
+
+    <!-- Modal Results -->
+    <div class="modal" id="resultsModal" style="display: none;">
+        <div class="modal-card">
+            <h2>Simulācijas Rezultāti 🏁</h2>
+            <div class="score-stars" id="starsRating">⭐⭐⭐</div>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Pareizas atbildes: <b id="chatScore" style="color: var(--accent);">0 / 6</b></p>
+            
+            <div class="scam-alert-box" id="secretScamResult"></div>
+
+            <button class="restart-btn" onclick="location.reload()">Spēlēt vēlreiz</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const questions = [
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playBeep(freq, type = 'sine', duration = 0.15) {
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    let clickedSecretScam = false;
+    let currentChatIndex = 0;
+    let score = 0;
+    let completedChats = new Set();
+
+    const chats = [
         {
-            sender: "Mārcis (CEO)",
-            text: "Sveiks! Esmu sanāksmē. Mums steidzami jāpārskaita $3,200 avanss partnerim. Vai vari veikt pārskaitījumu tūlīt?",
-            type: "scam",
-            explain: "Tā ir krāpšana! Vadītāji neprasa steidzamus finanšu pārskaitījumus sarakstē."
+            id: 0,
+            name: "Mārcis Bērziņš (CEO)",
+            avatar: "CEO",
+            preview: "Steidzami! Esmu sanāksmē...",
+            messages: [
+                { sender: "them", text: "Sveiks! Esmu svarīgā sanāksmē. Mums steidzami jāpārskaita $3,200 avanss jaunajam partnerim. Vai vari veikt pārskaitījumu tūlīt?" }
+            ],
+            options: [
+                { text: "Labi, tūlīt pārskaitīšu! Atsūti rekvizītus.", isCorrect: false, feedback: "❌ KRĀPŠANA! Vadītājs neprasīs veikt steidzamus pārskaitījumus caur čatu." },
+                { text: "Pārbaudīšu rēķinu un piezvanīšu uz jūsu oficiālo tālruni.", isCorrect: true, feedback: "✅ PAREIZI! Vienmēr pārapstipriniet finanšu pieprasījumus." }
+            ]
         },
         {
-            sender: "Laura (HR)",
-            text: "Čau! Lūdzu, iesūti savus atvaļinājuma datumus mūsu iekšējā darba sistēmā.",
-            type: "safe",
-            explain: "Tas ir droši! Standarta darba komunikācija iekšējā sistēmā."
+            id: 1,
+            name: "Laura (Personāla daļa)",
+            avatar: "HR",
+            preview: "Atvaļinājuma grafiks",
+            messages: [
+                { sender: "them", text: "Čau! Lūdzu, iesūti savus vēlamos atvaļinājuma datumus nākamajam mēnesim mūsu iekšējā HR sistēmā. Paldies!" }
+            ],
+            options: [
+                { text: "Tā ir krāpšana! Nekādus datumus nesūtīšu.", isCorrect: false, feedback: "❌ KĻŪDA! Šī bija parasta darba sarakste." },
+                { text: "Labi, aizpildīšu datumus iekšējā HR sistēmā.", isCorrect: true, feedback: "✅ PAREIZI! Šī ir standarta darba komunikācija." }
+            ]
         },
         {
-            sender: "Bankas Atbalsts",
-            text: "Brīdinājums: Aizdomīgs darījums (1,200 EUR). Apstipriniet identitāti ar Smart-ID PIN1.",
-            type: "scam",
-            explain: "Tā ir krāpšana! Banka nekad neprasa PIN kodus caur ziņām."
+            id: 2,
+            name: "SEB / Swedbank Atbalsts",
+            avatar: "BNK",
+            preview: "Brīdinājums par kontu!",
+            messages: [
+                { sender: "them", text: "Brīdinājums: Aizdomīgs darījums (1,200 EUR). Lai novērstu bloķēšanu, apstipriniet identitāti ar Smart-ID PIN1." }
+            ],
+            options: [
+                { text: "Paldies! Apstiprināšu PIN1 tūlīt.", isCorrect: false, feedback: "❌ KRĀPŠANA! Banka neprasa apstiprināt PIN kodus čatā." },
+                { text: "Pats ieiešu bankas lietotnē un sazināšos ar atbalstu.", isCorrect: true, feedback: "✅ PAREIZI! Bankas nesazinās šādā veidā." }
+            ]
         },
         {
-            sender: "Kārlis (PM)",
-            text: "Sveiks! Ieliku kopīgajā Google Drive mapē prezentācijas melnrakstu. Uzmet skatu.",
-            type: "safe",
-            explain: "Tas ir droši! Parasts darba fails kopīgajā vidē."
+            id: 3,
+            name: "Kārlis (Projekta Vadītājs)",
+            avatar: "PM",
+            preview: "Prezentācijas fails",
+            messages: [
+                { sender: "them", text: "Sveiks! Ieliku kopīgajā Google Drive mapē rītdienas prezentācijas melnrakstu. Uzmet skatu, kad vari." }
+            ],
+            options: [
+                { text: "Apskatīšos failu mūsu kopīgajā darba mapē.", isCorrect: true, feedback: "✅ PAREIZI! Droša ziņa jau zināmajā darba vidē." },
+                { text: "Ziņošu par krāpšanu un bloķēšu Kārli.", isCorrect: false, feedback: "❌ KĻŪDA! Parasta ziņa no kolēģa." }
+            ]
         },
         {
-            sender: "IT Atbalsts",
-            text: "Čau! Šonakt veicam profilaksi. Nosūti man savu paroli, lai saglabātu piekļuvi.",
-            type: "scam",
-            explain: "Tā ir krāpšana! Paroles nedrīkst izpaust nevienam, pat IT atbalstam."
+            id: 4,
+            name: "Jānis (IT Atbalsts)",
+            avatar: "IT",
+            preview: "Sistēmas atjauninājums",
+            messages: [
+                { sender: "them", text: "Čau! Šonakt veicam profilaksi. Nosūti man savu pašreizējo paroli, lai saglabātu piekļuves tiesības." }
+            ],
+            options: [
+                { text: "Lūk, mana parole: Parole2026!", isCorrect: false, feedback: "❌ KRĀPŠANA! Paroles nedrīkst izpaust nevienam." },
+                { text: "Pats veikšu atjauninājumu pēc oficiālās instrukcijas.", isCorrect: true, feedback: "✅ PAREIZI! Nekad neatklājiet paroles." }
+            ]
         },
         {
-            sender: "DPD Piegāde",
-            text: "Sūtījums aizturēts: apmaksājiet muitas komisiju (1.85 EUR) vietnē http://dpd-fake.com",
-            type: "scam",
-            explain: "Tā ir krāpšana! Viltota saite ar mērķi izvilināt kartes datus."
+            id: 5,
+            name: "DPD Piegāde",
+            avatar: "DPD",
+            preview: "Sūtījums aizturēts!",
+            messages: [
+                { sender: "them", text: "Sūtījums aizturēts: nav apmaksāta muitas komisija (1.85 EUR). Apmaksājiet šeit: http://dpd-latvija-paka.com" }
+            ],
+            options: [
+                { text: "Uzreiz ieiešu saitē un samaksāšu 1.85 EUR.", isCorrect: false, feedback: "❌ KRĀPŠANA! Viltota adrese un spiediens ar laiku." },
+                { text: "Pārbaudīšu sūtījuma numuru oficiālajā DPD mājaslapā.", isCorrect: true, feedback: "✅ PAREIZI! Vienmēr pārbaudiet oficiālajā vietnē." }
+            ]
         }
     ];
 
-    let currentIndex = 0;
-    let points = 0;
-
-    function renderQuestion() {
-        const q = questions[currentIndex];
-        document.getElementById('senderName').innerText = q.sender;
-        document.getElementById('messageText').innerText = `"${q.text}"`;
-        document.getElementById('progressCounter').innerText = `${currentIndex + 1} / ${questions.length}`;
-        
-        const fb = document.getElementById('feedbackBox');
-        fb.style.display = 'none';
-        
-        document.getElementById('actionButtons').style.pointerEvents = 'auto';
-        document.getElementById('actionButtons').style.opacity = '1';
+    function startGame() {
+        document.getElementById('introModal').style.display = 'none';
+        selectChat(0);
     }
 
-    function makeChoice(userChoice) {
-        const q = questions[currentIndex];
-        const isCorrect = userChoice === q.type;
+    function closeBanner() {
+        document.getElementById('systemBanner').style.display = 'none';
+    }
+
+    function triggerSecretScam() {
+        clickedSecretScam = true;
+        playBeep(300, 'sawtooth', 0.2);
+        closeBanner();
+        alert("⚠️ [Sistēmas Paziņojums]: Skenēšana pabeigta.");
+    }
+
+    function renderChatList() {
+        const listEl = document.getElementById('chatList');
+        listEl.innerHTML = '';
+        chats.forEach((chat, idx) => {
+            const isCompleted = completedChats.has(idx);
+            const item = document.createElement('div');
+            item.className = `chat-item ${idx === currentChatIndex ? 'active' : ''}`;
+            item.onclick = () => selectChat(idx);
+            item.innerHTML = `
+                <div class="avatar">${chat.avatar}</div>
+                <div class="chat-info">
+                    <div class="chat-title">${chat.name}</div>
+                    <div class="chat-preview">${chat.preview}</div>
+                </div>
+                ${!isCompleted ? `<span class="badge">Jauns</span>` : '<span style="color:var(--accent); font-size:0.8rem;">✓</span>'}
+            `;
+            listEl.appendChild(item);
+        });
+
+        document.getElementById('progressText').innerText = `${completedChats.size} / ${chats.length}`;
+    }
+
+    function selectChat(idx) {
+        currentChatIndex = idx;
+        renderChatList();
+        const chat = chats[idx];
         
-        if (isCorrect) points++;
+        document.getElementById('activeAvatar').innerText = chat.avatar;
+        document.getElementById('activeTitle').innerText = chat.name;
+        
+        const msgsEl = document.getElementById('chatMessages');
+        msgsEl.innerHTML = '';
 
-        const fb = document.getElementById('feedbackBox');
-        fb.style.display = 'block';
-        fb.style.backgroundColor = isCorrect ? '#064e3b' : '#7f1d1d';
-        fb.style.color = isCorrect ? '#6ee7b7' : '#fca5a5';
-        fb.innerText = (isCorrect ? '✅ Pareizi! ' : '❌ Nepareizi! ') + q.explain;
+        playBeep(600, 'sine', 0.08);
 
-        document.getElementById('actionButtons').style.pointerEvents = 'none';
-        document.getElementById('actionButtons').style.opacity = '0.5';
+        chat.messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${msg.sender === 'them' ? 'received' : 'sent'}`;
+            msgDiv.innerHTML = `<div>${msg.text}</div><div class="message-time">Tikko</div>`;
+            msgsEl.appendChild(msgDiv);
+        });
 
-        setTimeout(() => {
-            currentIndex++;
-            if (currentIndex < questions.length) {
-                renderQuestion();
-            } else {
-                showResults();
+        const optsEl = document.getElementById('optionsGrid');
+        optsEl.innerHTML = '';
+
+        if (!completedChats.has(idx)) {
+            chat.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerHTML = `<span>${opt.text}</span> <span>➔</span>`;
+                btn.onclick = () => handleAnswer(opt, idx);
+                optsEl.appendChild(btn);
+            });
+        } else {
+            optsEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:10px;">Atbilde sniegta.</div>`;
+        }
+    }
+
+    function handleAnswer(opt, chatIdx) {
+        completedChats.add(chatIdx);
+        if(opt.isCorrect) {
+            score++;
+            playBeep(800, 'sine', 0.15);
+        } else {
+            playBeep(250, 'square', 0.2);
+        }
+
+        alert(opt.feedback);
+        
+        if(completedChats.size < chats.length) {
+            let nextIdx = (chatIdx + 1) % chats.length;
+            while(completedChats.has(nextIdx)) {
+                nextIdx = (nextIdx + 1) % chats.length;
             }
-        }, 2000);
+            selectChat(nextIdx);
+        } else {
+            showResults();
+        }
     }
 
     function showResults() {
-        document.getElementById('playArea').style.display = 'none';
-        document.getElementById('endScreen').style.display = 'flex';
-        document.getElementById('finalScore').innerText = `${points} / ${questions.length}`;
-    }
+        document.getElementById('chatScore').innerText = `${score} / ${chats.length}`;
+        const secretEl = document.getElementById('secretScamResult');
+        const starsEl = document.getElementById('starsRating');
 
-    function resetGame() {
-        currentIndex = 0;
-        points = 0;
-        document.getElementById('playArea').style.display = 'flex';
-        document.getElementById('endScreen').style.display = 'none';
-        renderQuestion();
-    }
+        if(score === 6 && !clickedSecretScam) starsEl.innerText = "⭐⭐⭐⭐⭐";
+        else if(score >= 4) starsEl.innerText = "⭐⭐⭐⭐";
+        else if(score >= 3) starsEl.innerText = "⭐⭐⭐";
+        else starsEl.innerText = "⭐";
 
-    // Uzsāk spēli uzreiz
-    renderQuestion();
+        if(clickedSecretScam) {
+            secretEl.className = "scam-alert-box failed";
+            secretEl.innerHTML = `
+                <h4 style="color:#ef4444; margin-bottom:6px;">🚨 SLEPENAIS APMĀNS IR NOSTRĀDĀJIS!</h4>
+                <p>Jūs uzķērāties uz viltotā "Drošības Moduļa" logrīka ekrāna stūrī.</p>
+            `;
+        } else {
+            secretEl.className = "scam-alert-box passed";
+            secretEl.innerHTML = `
+                <h4 style="color:var(--accent); margin-bottom:6px;">🛡️ IZCILA MODRĪBA!</h4>
+                <p>Jūs neuzķērāties uz slazdā un pareizi izvērtējāt visas ziņas.</p>
+            `;
+        }
+        
+        document.getElementById('resultsModal').style.display = 'flex';
+    }
 </script>
 
 </body>
